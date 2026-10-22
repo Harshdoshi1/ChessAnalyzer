@@ -1,0 +1,274 @@
+<div class="center-workspace">
+  <!-- Top Player Header -->
+  <div class="player-bar top-player-bar">
+    <div class="player-info-left">
+      <div class="player-avatar" [ngClass]="isFlipped ? 'white-avatar' : 'black-avatar'"></div>
+      <div class="player-text">
+        <span class="player-name">{{ topPlayerName }}</span>
+        <span class="player-subtext" [class.turn-visible]="!!topPlayerSubtext">{{ topPlayerSubtext || '&nbsp;' }}</span>
+      </div>
+    </div>
+
+    <!-- Quick move indicator & arrows on right -->
+    <div class="player-move-nav">
+      <span class="move-nav-label">Move <strong>{{ currentStep?.moveNumber || 1 }}</strong> ... <strong>{{ currentStep?.san || 'Start' }}</strong></span>
+      <div class="nav-mini-arrows">
+        <button type="button" class="mini-arrow-btn" (click)="previousMove()" [disabled]="currentStepIndex === 0" title="Previous move">
+          <span [innerHTML]="icons['prev'] | safeHtml"></span>
+        </button>
+        <button type="button" class="mini-arrow-btn" (click)="nextMove()" [disabled]="currentStepIndex === totalMoves" title="Next move">
+          <span [innerHTML]="icons['next'] | safeHtml"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Board Area with Coordinates: CSS Grid layout -->
+  <div class="board-frame-container">
+    <!-- Rank coordinates (left) -->
+    <div class="coord-column rank-coords" aria-hidden="true">
+      <span *ngFor="let r of rankLabels" class="coord-label">{{ r }}</span>
+    </div>
+
+    <!-- 8x8 Chessboard Grid -->
+    <div class="chessboard" role="grid" aria-label="Interactive 8x8 Chessboard">
+      <!-- Checkmate Floating Cinematic Victory Banner -->
+      <div *ngIf="isCheckmate && !checkmateBannerDismissed" class="checkmate-banner-toast">
+        <div class="checkmate-banner-content">
+          <span class="banner-mate-badge">#</span>
+          <div class="banner-titles">
+            <span class="banner-title-main">CHECKMATE</span>
+            <span class="banner-title-sub">{{ checkmateWinner }} wins</span>
+          </div>
+          <button type="button" class="btn-dismiss-mate" (click)="dismissCheckmateBanner()" title="Dismiss banner">
+            &times;
+          </button>
+        </div>
+      </div>
+
+      <ng-container *ngFor="let row of board; let rIdx = index">
+        <div *ngFor="let sq of row; let cIdx = index"
+             class="square"
+             [ngClass]="[
+               sq.isLight ? 'light' : 'dark',
+               sq.isLastMoveFrom ? 'last-move-from' : '',
+               sq.isLastMoveTo ? 'last-move-to' : '',
+               sq.isSelected ? 'selected-square' : '',
+               sq.isLegalTarget ? 'legal-target-square' : '',
+               sq.isCheck ? 'check-square' : '',
+               sq.isMatedKing ? 'checkmate-square' : '',
+               sq.isWinningKing ? 'winning-king-square' : '',
+               sq.isBestMoveFrom ? 'best-move-from-highlight' : '',
+               sq.isBestMoveTo ? 'best-move-to-highlight' : '',
+               (sq.isLastMoveTo && hasFullAnalysis && currentClassificationNormalized) ? ('move-fx-' + currentClassificationNormalized) : ''
+             ]"
+             [attr.data-square]="sq.square"
+             (click)="onSquareClick(sq)"
+             (dragover)="onDragOver($event, sq)"
+             (drop)="onDrop($event, sq)">
+
+          <!-- Checkmate Special FX on Mated King -->
+          <ng-container *ngIf="sq.isMatedKing">
+            <span class="checkmate-burst-aura"></span>
+            <div class="checkmate-crown-badge">
+              <span class="mate-symbol">#</span>
+            </div>
+
+            <!-- King Demolished Pieces (5 Shards + Sparks) -->
+            <div class="king-shatter-container" aria-hidden="true">
+              <div class="king-shard shard-crown" [innerHTML]="getPieceSvg(sq) | safeHtml"></div>
+              <div class="king-shard shard-shoulder-left" [innerHTML]="getPieceSvg(sq) | safeHtml"></div>
+              <div class="king-shard shard-shoulder-right" [innerHTML]="getPieceSvg(sq) | safeHtml"></div>
+              <div class="king-shard shard-core" [innerHTML]="getPieceSvg(sq) | safeHtml"></div>
+              <div class="king-shard shard-base" [innerHTML]="getPieceSvg(sq) | safeHtml"></div>
+              <span class="shatter-debris debris-1"></span>
+              <span class="shatter-debris debris-2"></span>
+              <span class="shatter-debris debris-3"></span>
+              <span class="shatter-debris debris-4"></span>
+            </div>
+          </ng-container>
+
+          <!-- Winning King Aura -->
+          <ng-container *ngIf="sq.isWinningKing">
+            <span class="winning-king-corona"></span>
+          </ng-container>
+
+          <!-- Capture ripple shockwave animation -->
+          <span *ngIf="capturedSquareAnimating === sq.square" class="capture-shockwave"></span>
+
+          <!-- Best Move destination marker (light blue target) -->
+          <span *ngIf="sq.isBestMoveTo && !sq.isLegalTarget" class="best-move-target-marker"></span>
+
+          <!-- Full Analysis: Brilliant Move Special FX (Shockwave + Sparkles) -->
+          <div *ngIf="sq.isLastMoveTo && hasFullAnalysis && currentClassificationNormalized === 'brilliant'"
+               class="brilliant-fx-container"
+               [attr.data-fx-key]="moveFxKey">
+            <span class="brilliant-shockwave"></span>
+            <span class="brilliant-aura"></span>
+            <span class="sparkle-star star-1"></span>
+            <span class="sparkle-star star-2"></span>
+            <span class="sparkle-star star-3"></span>
+            <span class="sparkle-star star-4"></span>
+            <span class="sparkle-star star-5"></span>
+            <span class="sparkle-star star-6"></span>
+          </div>
+
+          <!-- Full Analysis: Blunder Move Special FX (Red Shockwave + Flash) -->
+          <div *ngIf="sq.isLastMoveTo && hasFullAnalysis && currentClassificationNormalized === 'blunder'"
+               class="blunder-fx-container"
+               [attr.data-fx-key]="moveFxKey">
+            <span class="blunder-shockwave"></span>
+            <span class="blunder-aura"></span>
+            <span class="blunder-flash-overlay"></span>
+          </div>
+
+          <!-- Full Analysis: Mistake Move Special FX (Orange Alert Shockwave) -->
+          <div *ngIf="sq.isLastMoveTo && hasFullAnalysis && currentClassificationNormalized === 'mistake'"
+               class="mistake-fx-container"
+               [attr.data-fx-key]="moveFxKey">
+            <span class="mistake-shockwave"></span>
+            <span class="mistake-aura"></span>
+          </div>
+
+          <!-- Full Analysis: Inaccuracy Move Special FX (Yellow Aura) -->
+          <div *ngIf="sq.isLastMoveTo && hasFullAnalysis && currentClassificationNormalized === 'inaccuracy'"
+               class="inaccuracy-fx-container"
+               [attr.data-fx-key]="moveFxKey">
+            <span class="inaccuracy-aura"></span>
+          </div>
+
+          <!-- Full Analysis: Best / Great Move Special FX (Green Ring Burst) -->
+          <div *ngIf="sq.isLastMoveTo && hasFullAnalysis && currentClassificationNormalized === 'best'"
+               class="best-fx-container"
+               [attr.data-fx-key]="moveFxKey">
+            <span class="best-ring-burst"></span>
+          </div>
+
+          <!-- Full Analysis: Book Move Special FX (Tan/Wood Aura) -->
+          <div *ngIf="sq.isLastMoveTo && hasFullAnalysis && currentClassificationNormalized === 'book'"
+               class="book-fx-container"
+               [attr.data-fx-key]="moveFxKey">
+            <span class="book-aura"></span>
+          </div>
+
+          <!-- Legal move destination dot (empty square) -->
+          <span *ngIf="sq.isLegalTarget && !sq.isLegalCapture && !sq.pieceKey" class="legal-dest-dot"></span>
+
+          <!-- Legal move capture ring (occupied square) -->
+          <span *ngIf="sq.isLegalTarget && (sq.isLegalCapture || sq.pieceKey)" class="legal-capture-ring"></span>
+
+          <!-- Chess Piece with translation, capture, checkmate, and classification reactions -->
+          <div *ngIf="sq.pieceKey"
+               class="piece-container"
+               [ngClass]="[
+                 isPieceDraggable(sq) ? 'draggable-piece' : '',
+                 isPieceAnimating(sq.square) ? 'animating-move' : '',
+                 isPieceFadeIn(sq.square) ? 'piece-fade-in' : '',
+                 capturedSquareAnimating === sq.square ? 'animating-captured' : '',
+                 sq.isMatedKing ? 'mated-king-demolish' : '',
+                 sq.isWinningKing ? 'winning-king-radiance' : '',
+                 (sq.isLastMoveTo && hasFullAnalysis && currentClassificationNormalized === 'blunder') ? 'piece-blunder-shake' : '',
+                 (sq.isLastMoveTo && hasFullAnalysis && currentClassificationNormalized === 'mistake') ? 'piece-mistake-wobble' : '',
+                 (sq.isLastMoveTo && hasFullAnalysis && currentClassificationNormalized === 'brilliant') ? 'piece-brilliant-glow' : '',
+                 (sq.isLastMoveTo && hasFullAnalysis && currentClassificationNormalized === 'best') ? 'piece-best-pop' : ''
+               ]"
+               [attr.data-fx-key]="moveFxKey"
+               [style.transform]="getPieceTransform(sq.square)"
+               [style.transition]="getPieceTransition(sq.square)"
+               [draggable]="isPieceDraggable(sq)"
+               (dragstart)="onDragStart($event, sq)"
+               (dragend)="onDragEnd()"
+               [innerHTML]="getPieceSvg(sq) | safeHtml">
+          </div>
+
+          <!-- Full Analysis: Chess.com Style Floating Move Classification Badge -->
+          <div *ngIf="sq.isLastMoveTo && hasFullAnalysis && currentClassificationNormalized"
+               class="chesscom-move-badge-wrapper"
+               [ngClass]="'badge-' + currentClassificationNormalized"
+               [attr.data-fx-key]="moveFxKey"
+               [attr.title]="currentStepClassification || ''">
+            <div class="chesscom-badge-bubble"
+                 [innerHTML]="getClassificationBadgeSvg(currentClassificationNormalized) | safeHtml">
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+
+    <!-- Bottom-left corner spacer -->
+    <div class="coord-corner" aria-hidden="true"></div>
+
+    <!-- File coordinates (bottom) -->
+    <div class="coord-row file-coords" aria-hidden="true">
+      <span *ngFor="let f of fileLabels" class="coord-label">{{ f }}</span>
+    </div>
+  </div>
+
+  <!-- Bottom Player Header -->
+  <div class="player-bar bottom-player-bar">
+    <div class="player-info-left">
+      <div class="player-avatar" [ngClass]="isFlipped ? 'black-avatar' : 'white-avatar'"></div>
+      <div class="player-text">
+        <span class="player-name">{{ bottomPlayerName }}</span>
+        <span class="player-subtext" [class.turn-visible]="!!bottomPlayerSubtext">{{ bottomPlayerSubtext || '&nbsp;' }}</span>
+      </div>
+    </div>
+
+    <!-- Flip Board Button -->
+    <button type="button" class="btn-flip-board" (click)="flipBoard()" title="Flip board orientation">
+      <span class="flip-icon" [innerHTML]="icons['flip'] | safeHtml"></span>
+      <span>Flip board</span>
+    </button>
+  </div>
+
+  <!-- Bottom Move Timeline Bar -->
+  <div class="move-timeline-bar">
+    <!-- Transport Controls on Left -->
+    <div class="transport-controls">
+      <button type="button" class="transport-btn" (click)="goToStart()" [disabled]="currentStepIndex === 0" title="First move">
+        <span [innerHTML]="icons['first'] | safeHtml"></span>
+      </button>
+      <button type="button" class="transport-btn" (click)="previousMove()" [disabled]="currentStepIndex === 0" title="Previous move">
+        <span [innerHTML]="icons['prev'] | safeHtml"></span>
+      </button>
+      <!-- Prominent Play/Pause Button in Lime Green -->
+      <button type="button" class="transport-btn play-btn" (click)="togglePlayPause()" [title]="isPlaying ? 'Pause replay' : 'Play moves'">
+        <span [innerHTML]="(isPlaying ? icons['pause'] : icons['play']) | safeHtml"></span>
+      </button>
+      <button type="button" class="transport-btn" (click)="nextMove()" [disabled]="currentStepIndex === totalMoves" title="Next move">
+        <span [innerHTML]="icons['next'] | safeHtml"></span>
+      </button>
+      <button type="button" class="transport-btn" (click)="goToEnd()" [disabled]="currentStepIndex === totalMoves" title="Last move">
+        <span [innerHTML]="icons['last'] | safeHtml"></span>
+      </button>
+    </div>
+
+    <!-- Move Ribbon in Center -->
+    <div class="timeline-ribbon-container">
+      <div class="timeline-ribbon">
+        <ng-container *ngFor="let step of moveSteps">
+          <div *ngIf="step.index > 0"
+               class="timeline-pill-wrap"
+               [attr.data-step]="step.index"
+               (click)="showStep(step.index)">
+            <span class="timeline-step-num">{{ step.color === 'w' ? step.moveNumber : '...' }}</span>
+            <span class="timeline-pill"
+                  [class.active]="currentStepIndex === step.index"
+                  [title]="(step.san || '') + (step.classification ? ' (' + step.classification + ' ' + (step.evalText || '') + ')' : '')">
+              {{ step.san }}
+              <span *ngIf="step.classificationSymbol" class="pill-class-badge" [ngClass]="'badge-' + (step.classification?.toLowerCase() || '')">
+                {{ step.classificationSymbol }}
+              </span>
+            </span>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+
+    <!-- Right Status info -->
+    <div class="timeline-status-info">
+      <span class="step-ratio">{{ currentStepIndex }} / {{ totalMoves }}</span>
+      <span class="eco-code" *ngIf="openingEco">ECO: {{ openingEco }}</span>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <SpaRoot>./</SpaRoot>
+  </PropertyGroup>
+
+  <Target Name="BuildAngular" BeforeTargets="Build" Condition="!Exists('dist/chess-analyzer.ui/browser/index.html')">
+    <Exec Command="npm run build" />
+  </Target>
+
+</Project>

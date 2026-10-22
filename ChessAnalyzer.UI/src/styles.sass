@@ -1,0 +1,76 @@
+*
+  box-sizing: border-box
+
+:root, [data-theme="light"], body.light-theme
+  // Light Theme Tokens (Section 4)
+  --bg-app: #F2F5F1
+  --bg-header: #FFFFFF
+  --bg-panel: #FFFFFF
+  --bg-elevated: #F7F9F6
+  --border-color: #D7E0D8
+  --border-subtle: #E2E8E3
+  --text-primary: #17251E
+  --text-secondary: #617168
+  --text-muted: #84968C
+  --accent-primary: #4F8F37
+  --accent-primary-hover: #42782E
+  --accent-text: #FFFFFF
+  --board-dark: #71947C
+  --board-light: #E8E5CF
+  --board-border: #CBD5CD
+  --board-highlight: #C6ED72
+  --board-highlight-alpha: rgba(198, 237, 114, 0.55)
+  --board-selected: #C6ED72
+  --board-check: #F07878
+  --eval-positive: #32A86E
+  --eval-negative: #D64545
+  --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.03)
+
+[data-theme="dark"], body.dark-theme
+  // Dark Theme — Darker Forest Green (Section 3)
+  --bg-app: #080D0D
+  --bg-header: #0A1110
+  --bg-panel: #101A18
+  --bg-elevated: #14211D
+  --border-color: #263A32
+  --border-subtle: #1C2B25
+  --text-primary: #F0F5F1
+  --text-secondary: #A0B0A8
+  --text-muted: #6B7C74
+  --accent-primary: #A3F078
+  --accent-primary-hover: #92DC69
+  --accent-text: #080D0D
+  --board-dark: #365D4B
+  --board-light: #D7D9BC
+  --board-border: #1B2924
+  --board-highlight: #B8F56A
+  --board-highlight-alpha: rgba(184, 245, 106, 0.5)
+  --board-selected: #B8F56A
+  --board-check: #F07878
+  --eval-positive: #54D69A
+  --eval-negative: #F07878
+  --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.35)
+
+html, body
+  margin: 0
+  padding: 0
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif
+  background-color: var(--bg-app)
+  color: var(--text-primary)
+  min-height: 100vh
+  overflow-x: hidden
+  transition: background-color 0.2s ease, color 0.2s ease
+
+::-webkit-scrollbar
+  width: 6px
+  height: 6px
+
+::-webkit-scrollbar-track
+  background: var(--bg-app)
+
+::-webkit-scrollbar-thumb
+  background: var(--border-color)
+  border-radius: 4px
+
+::-webkit-scrollbar-thumb:hover
+  background: var(--text-secondary)

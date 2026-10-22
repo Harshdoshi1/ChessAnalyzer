@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="ChessAnalyzer.Api/ChessAnalyzer.Api.csproj" />
+  <Project Path="ChessAnalyzer.Application/ChessAnalyzer.Application.csproj" />
+  <Project Path="ChessAnalyzer.Domain/ChessAnalyzer.Domain.csproj" />
+  <Project Path="ChessAnalyzer.Infrastructure/ChessAnalyzer.Infrastructure.csproj" />
+  <Project Path="ChessAnalyzer.UI/ChessAnalyzer.UI.csproj" />
+  <Project Path="ChessAnalyzer.UnitTests/ChessAnalyzer.UnitTests.csproj" />
+</Solution>

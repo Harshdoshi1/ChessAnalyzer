@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ChessDotNet" Version="1.0.0" />
+    <PackageReference Include="ChessDotNetCore" Version="1.6.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.12" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ChessAnalyzer.Application\ChessAnalyzer.Application.csproj" />
+    <ProjectReference Include="..\ChessAnalyzer.Domain\ChessAnalyzer.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Chess\Stockfish\stockfish-windows-x86-64-universal.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

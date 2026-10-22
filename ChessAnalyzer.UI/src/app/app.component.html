@@ -1,0 +1,72 @@
+<header class="app-navbar">
+  <div class="navbar-content">
+    <!-- Brand on left -->
+    <div class="brand">
+      <div class="brand-badge-box">
+        <span class="brand-knight" [innerHTML]="icons['knightShield'] | safeHtml"></span>
+      </div>
+      <div class="brand-text-wrap">
+        <span class="brand-name">ChessAnalyzer</span>
+        <span class="brand-subtitle">PROFESSIONAL GAME ANALYSIS</span>
+      </div>
+    </div>
+
+    <!-- Center Navigation Tabs -->
+    <nav class="nav-links">
+      <button type="button"
+              class="nav-tab-btn"
+              [class.active]="activeNavTab === 'analyze'"
+              (click)="setActiveNav('analyze')">
+        <span class="tab-icon" [innerHTML]="icons['analyze'] | safeHtml"></span>
+        <span class="tab-label">Analyze</span>
+      </button>
+
+      <button type="button"
+              class="nav-tab-btn"
+              [class.active]="activeNavTab === 'games'"
+              (click)="setActiveNav('games')"
+              title="Games feature coming soon">
+        <span class="tab-icon" [innerHTML]="icons['games'] | safeHtml"></span>
+        <span class="tab-label">Games</span>
+      </button>
+
+      <button type="button"
+              class="nav-tab-btn"
+              [class.active]="activeNavTab === 'explorer'"
+              (click)="setActiveNav('explorer')"
+              title="Opening Explorer feature coming soon">
+        <span class="tab-icon" [innerHTML]="icons['explorer'] | safeHtml"></span>
+        <span class="tab-label">Opening Explorer</span>
+      </button>
+
+      <button type="button"
+              class="nav-tab-btn"
+              [class.active]="activeNavTab === 'insights'"
+              (click)="setActiveNav('insights')"
+              title="Insights feature coming soon">
+        <span class="tab-icon" [innerHTML]="icons['insights'] | safeHtml"></span>
+        <span class="tab-label">Insights</span>
+      </button>
+    </nav>
+
+    <!-- Right Controls: Theme Toggle & Settings -->
+    <div class="navbar-actions">
+      <button type="button"
+              class="icon-action-btn theme-toggle-btn"
+              (click)="themeService.toggleTheme()"
+              [title]="themeService.isDark() ? 'Switch to Light Theme' : 'Switch to Darker Forest Green Theme'">
+        <span class="action-icon" [innerHTML]="(themeService.isDark() ? icons['sun'] : icons['moon']) | safeHtml"></span>
+      </button>
+
+      <button type="button"
+              class="icon-action-btn settings-btn"
+              title="Settings">
+        <span class="action-icon" [innerHTML]="icons['settings'] | safeHtml"></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="app-main">
+  <app-game-analysis></app-game-analysis>
+</main>

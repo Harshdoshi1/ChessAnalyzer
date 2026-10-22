@@ -1,0 +1,406 @@
+<div class="workspace-layout" [class.sidebar-collapsed]="isSidebarCollapsed">
+  <!-- ============================================== -->
+  <!-- 1. LEFT SIDEBAR                                -->
+  <!-- ============================================== -->
+  <aside class="left-sidebar">
+    <!-- Panel 1: Loaded Game -->
+    <div class="panel-card loaded-game-card">
+      <div class="panel-header-row">
+        <span class="panel-title">Loaded Game</span>
+        <button type="button" class="btn-collapse" (click)="toggleSidebarCollapse()" title="Collapse sidebar">
+          <span [innerHTML]="icons['first'] | safeHtml"></span>
+          <span>Collapse</span>
+        </button>
+      </div>
+      <div class="loaded-game-players">
+        <h3 class="players-headline">{{ whitePlayerName }} <span class="players-separator">—</span> {{ blackPlayerName }}</h3>
+      </div>
+      <div class="loaded-game-tags">
+        <span class="tag-pill tag-mainline">Main Line</span>
+        <span class="tag-pill tag-eco">{{ openingEco }}</span>
+        <span class="tag-pill tag-status">{{ gameStatus }}</span>
+      </div>
+    </div>
+
+    <!-- Panel 2: Player Accuracy -->
+    <div class="panel-card player-accuracy-card">
+      <div class="panel-header-row">
+        <span class="panel-title">Player Accuracy</span>
+        <span class="details-link">Details &rarr;</span>
+      </div>
+      
+      <!-- White player accuracy row -->
+      <div class="accuracy-player-row">
+        <div class="player-icon-box white-box"></div>
+        <div class="player-accuracy-meta">
+          <span class="acc-player-name">White</span>
+          <div class="acc-mistakes-text" *ngIf="gameReview">
+            <span>Inaccuracies: {{ gameReview.whiteClassifications.inaccuracy }}</span>
+            <span>Mistakes: {{ gameReview.whiteClassifications.mistake }}</span>
+            <span>Blunders: {{ gameReview.whiteClassifications.blunder }}</span>
+          </div>
+          <div class="acc-mistakes-text" *ngIf="!gameReview">
+            <span>Run full analysis to view review</span>
+          </div>
+        </div>
+        <div class="accuracy-circle-badge">
+          {{ gameReview ? (gameReview.whiteAccuracy | number:'1.0-0') + '%' : '--%' }}
+        </div>
+      </div>
+
+      <!-- Black player accuracy row -->
+      <div class="accuracy-player-row">
+        <div class="player-icon-box black-box"></div>
+        <div class="player-accuracy-meta">
+          <span class="acc-player-name">Black</span>
+          <div class="acc-mistakes-text" *ngIf="gameReview">
+            <span>Inaccuracies: {{ gameReview.blackClassifications.inaccuracy }}</span>
+            <span>Mistakes: {{ gameReview.blackClassifications.mistake }}</span>
+            <span>Blunders: {{ gameReview.blackClassifications.blunder }}</span>
+          </div>
+          <div class="acc-mistakes-text" *ngIf="!gameReview">
+            <span>Run full analysis to view review</span>
+          </div>
+        </div>
+        <div class="accuracy-circle-badge">
+          {{ gameReview ? (gameReview.blackAccuracy | number:'1.0-0') + '%' : '--%' }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel 3: PGN Source -->
+    <div class="panel-card pgn-source-card">
+      <div class="panel-header-row">
+        <span class="panel-title">PGN Source</span>
+        <div class="pgn-header-actions">
+          <button type="button" class="btn-icon-subtle" (click)="copyPgn()" [title]="copyTooltip || 'Copy PGN'">
+            <span [innerHTML]="icons['copy'] | safeHtml"></span>
+          </button>
+          <button type="button" class="btn-icon-subtle" (click)="clearPgn()" title="Clear PGN">
+            <span [innerHTML]="icons['trash'] | safeHtml"></span>
+          </button>
+        </div>
+      </div>
+      <textarea [(ngModel)]="pgn" rows="5" class="pgn-input-area" placeholder="Enter or paste PGN game here, play moves on the board, or click 'Sample' to load a demo game..."></textarea>
+      <div class="pgn-actions-row">
+        <button type="button" class="btn-pgn-action" (click)="loadSampleGame()">
+          <span class="btn-ico" [innerHTML]="icons['sample'] | safeHtml"></span>
+          <span>Sample</span>
+        </button>
+        <button type="button" class="btn-pgn-action" (click)="quickLoadGame()">
+          <span class="btn-ico" [innerHTML]="icons['quickLoad'] | safeHtml"></span>
+          <span>Quick load</span>
+        </button>
+      </div>
+      <div *ngIf="errorMessage" class="error-banner">{{ errorMessage }}</div>
+    </div>
+
+    <!-- Panel 4: Classification Table -->
+    <div class="panel-card classification-card">
+      <div class="panel-header-row">
+        <span class="panel-title">Classification</span>
+        <span class="panel-col-sub">W / B</span>
+      </div>
+      <div class="classification-list">
+        <div class="class-row">
+          <div class="class-left">
+            <span class="class-icon-badge" [innerHTML]="icons['badgeBrilliant'] | safeHtml"></span>
+            <span class="class-name">Brilliant</span>
+          </div>
+          <span class="class-counts">{{ gameReview ? (gameReview.whiteClassifications.brilliant + ' / ' + gameReview.blackClassifications.brilliant) : '- / -' }}</span>
+        </div>
+
+        <div class="class-row">
+          <div class="class-left">
+            <span class="class-icon-badge" [innerHTML]="icons['badgeBest'] | safeHtml"></span>
+            <span class="class-name">Best move</span>
+          </div>
+          <span class="class-counts">{{ gameReview ? (gameReview.whiteClassifications.best + ' / ' + gameReview.blackClassifications.best) : '- / -' }}</span>
+        </div>
+
+        <div class="class-row">
+          <div class="class-left">
+            <span class="class-icon-badge" [innerHTML]="icons['badgeBook'] | safeHtml"></span>
+            <span class="class-name">Book move</span>
+          </div>
+          <span class="class-counts">{{ gameReview ? (gameReview.whiteClassifications.book + ' / ' + gameReview.blackClassifications.book) : '- / -' }}</span>
+        </div>
+
+        <div class="class-row">
+          <div class="class-left">
+            <span class="class-icon-badge" [innerHTML]="icons['badgeInaccuracy'] | safeHtml"></span>
+            <span class="class-name">Inaccuracy</span>
+          </div>
+          <span class="class-counts">{{ gameReview ? (gameReview.whiteClassifications.inaccuracy + ' / ' + gameReview.blackClassifications.inaccuracy) : '- / -' }}</span>
+        </div>
+
+        <div class="class-row">
+          <div class="class-left">
+            <span class="class-icon-badge" [innerHTML]="icons['badgeMistake'] | safeHtml"></span>
+            <span class="class-name">Mistake</span>
+          </div>
+          <span class="class-counts">{{ gameReview ? (gameReview.whiteClassifications.mistake + ' / ' + gameReview.blackClassifications.mistake) : '- / -' }}</span>
+        </div>
+
+        <div class="class-row">
+          <div class="class-left">
+            <span class="class-icon-badge" [innerHTML]="icons['badgeBlunder'] | safeHtml"></span>
+            <span class="class-name">Blunder</span>
+          </div>
+          <span class="class-counts">{{ gameReview ? (gameReview.whiteClassifications.blunder + ' / ' + gameReview.blackClassifications.blunder) : '- / -' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel 5: Prominent Run Full Analysis Button -->
+    <button type="button" class="btn-run-full-analysis" [disabled]="isLoading" (click)="runFullAnalysis()">
+      <span *ngIf="!isLoading" class="run-ico" [innerHTML]="icons['play'] | safeHtml"></span>
+      <span *ngIf="isLoading" class="spinner"></span>
+      <span>Run full analysis</span>
+    </button>
+  </aside>
+
+  <!-- ============================================== -->
+  <!-- 2. CENTER WORKSPACE                            -->
+  <!-- ============================================== -->
+  <section class="center-workspace-wrapper">
+    <app-game-board [(pgn)]="pgn"
+                    [analysisMoves]="analysisResult?.moves ?? []"
+                    [initialEvaluation]="analysisResult?.initialEvaluation"
+                    [suggestedBestMove]="suggestedNextMove"
+                    [openingName]="openingName"
+                    [openingEco]="openingEco"
+                    [isAnalyzing]="isAnalyzing"
+                    (moveMade)="onMoveMade($event)"
+                    (stepSelected)="onStepSelected($event)">
+    </app-game-board>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- 3. RIGHT ANALYSIS PANEL                        -->
+  <!-- ============================================== -->
+  <aside class="right-panel">
+    <!-- Tabs Header -->
+    <div class="right-tabs-row">
+      <button type="button" class="right-tab-btn" [class.active]="activeRightTab === 'analysis'" (click)="setActiveRightTab('analysis')">
+        Analysis
+      </button>
+      <button type="button" class="right-tab-btn" [class.active]="activeRightTab === 'all-moves'" (click)="setActiveRightTab('all-moves')">
+        All moves ({{ allMoves.length }})
+      </button>
+      <button type="button" class="right-tab-btn" [class.active]="activeRightTab === 'engine'" (click)="setActiveRightTab('engine')">
+        Engine lines
+      </button>
+    </div>
+
+    <!-- Tab Content 1: Analysis -->
+    <div class="right-tab-body" *ngIf="activeRightTab === 'analysis'">
+      <!-- Current position card -->
+      <div class="panel-card current-pos-card">
+        <div class="pos-header-row">
+          <span class="section-heading">Current position</span>
+          <span class="pos-eval-score">{{ currentEvaluationScore }}</span>
+        </div>
+        <p class="pos-advantage-sub">{{ evaluationAdvantageText }}</p>
+
+        <!-- Horizontal Advantage Indicator Bar with percentages -->
+        <div class="horizontal-adv-bar-wrap">
+          <div class="horizontal-adv-bar">
+            <div class="adv-fill-black" [style.width.%]="blackAdvantagePercent"></div>
+            <div class="adv-fill-white" [style.width.%]="whiteAdvantagePercent"></div>
+          </div>
+          <div class="adv-labels-row">
+            <span class="adv-lbl-left">Black {{ blackAdvantagePercent }}%</span>
+            <span class="adv-lbl-center">{{ evaluationAdvantageText }}</span>
+            <span class="adv-lbl-right">White {{ whiteAdvantagePercent }}%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Engine Recommendation Card -->
+      <div class="panel-card engine-rec-card">
+        <div class="rec-title-row">
+          <div class="rec-icon-badge">
+            <span [innerHTML]="icons['star'] | safeHtml"></span>
+          </div>
+          <div class="rec-title-meta">
+            <span class="rec-super">Engine recommendation</span>
+            <h4 class="rec-main-title">Best move</h4>
+          </div>
+          <div class="rec-eval-col">
+            <span class="rec-eval-number">{{ recommendedBestMoveEval }}</span>
+            <span class="rec-depth-text">{{ engineDepthText }}</span>
+          </div>
+        </div>
+
+        <!-- Explanation callout box -->
+        <div class="rec-explanation-box">
+          <p>{{ recommendedExplanation }}</p>
+        </div>
+
+        <!-- Alternative moves list -->
+        <div class="alt-moves-section">
+          <span class="alt-moves-header">Alternative moves</span>
+          <div class="alt-move-row" *ngFor="let alt of alternativeMoves; let i = index">
+            <span class="alt-move-name">{{ (i + 1) }}. {{ alt.san }}</span>
+            <span class="alt-move-eval">{{ alt.evalText }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Selected Move Card -->
+      <div class="panel-card selected-move-card">
+        <span class="section-heading">Selected move</span>
+        <div class="selected-move-header-row">
+          <div class="selected-san-wrap">
+            <h3 class="selected-san-title">{{ selectedMoveSan }}</h3>
+            <span class="tag-pill tag-book-move">{{ selectedMoveClassification }}</span>
+          </div>
+          <div class="selected-eval-col">
+            <span class="selected-eval-num">{{ currentEvaluationScore }}</span>
+            <span class="selected-nodes-text">{{ selectedMoveNodes }}</span>
+          </div>
+        </div>
+
+        <p class="selected-explanation-text">{{ selectedMoveExplanation }}</p>
+
+        <!-- Previous move / Next move comparison cards -->
+        <div class="move-nav-cards-row">
+          <div class="prev-move-card" (click)="stepToPrevMove()">
+            <span class="card-mini-lbl">Previous move</span>
+            <div class="card-move-vals">
+              <span class="card-san">{{ prevMoveInfo?.san || '3. Bb5' }}</span>
+              <span class="card-eval">{{ prevMoveInfo?.evalText || '-0.25' }}</span>
+            </div>
+          </div>
+
+          <div class="nav-arrow-center">
+            <span [innerHTML]="icons['next'] | safeHtml"></span>
+          </div>
+
+          <div class="next-move-card" (click)="stepToNextMove()">
+            <span class="card-mini-lbl">Next move</span>
+            <div class="card-move-vals">
+              <span class="card-san">{{ nextMoveInfo?.san || '4. Ba4' }}</span>
+              <span class="card-eval">{{ nextMoveInfo?.evalText || '-0.25' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- All Moves Results Summary (Interactive Score Table) -->
+      <div class="panel-card moves-summary-card" *ngIf="allMoves.length > 0">
+        <div class="pos-header-row">
+          <span class="section-heading">All moves results ({{ allMoves.length }})</span>
+          <button type="button" class="btn-link-action" (click)="setActiveRightTab('all-moves')">
+            Full view &rarr;
+          </button>
+        </div>
+        <div class="moves-score-table">
+          <div class="score-pair-row" *ngFor="let pair of movePairsList">
+            <span class="score-num">{{ pair.moveNumber }}.</span>
+            <!-- White move -->
+            <button type="button"
+                    class="score-move-btn"
+                    *ngIf="pair.white"
+                    [class.active]="activeStepIndex === pair.white.ply"
+                    (click)="goToMove(pair.white.ply)">
+              <span class="score-san">{{ pair.white.san }}</span>
+              <span class="score-badge-mini" *ngIf="pair.white.classification" [innerHTML]="getClassificationIcon(pair.white.classification) | safeHtml"></span>
+              <span class="score-eval-tag">{{ pair.white.evaluation.scoreText || '' }}</span>
+            </button>
+            <!-- Black move -->
+            <button type="button"
+                    class="score-move-btn"
+                    *ngIf="pair.black"
+                    [class.active]="activeStepIndex === pair.black.ply"
+                    (click)="goToMove(pair.black.ply)">
+              <span class="score-san">{{ pair.black.san }}</span>
+              <span class="score-badge-mini" *ngIf="pair.black.classification" [innerHTML]="getClassificationIcon(pair.black.classification) | safeHtml"></span>
+              <span class="score-eval-tag">{{ pair.black.evaluation.scoreText || '' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Content 2: All Moves Full Results Feed -->
+    <div class="right-tab-body" *ngIf="activeRightTab === 'all-moves'">
+      <!-- Review Summary Card -->
+      <div class="panel-card all-moves-recap-card" *ngIf="gameReview">
+        <div class="recap-header-row">
+          <div>
+            <h4 class="recap-opening-title">{{ gameReview.openingName }}</h4>
+            <span class="recap-eco-tag">ECO: {{ gameReview.openingEco }}</span>
+          </div>
+          <div class="recap-accuracies-box">
+            <div class="acc-badge-col">
+              <span class="acc-lbl">White</span>
+              <span class="acc-val">{{ gameReview.whiteAccuracy }}%</span>
+            </div>
+            <div class="acc-badge-col">
+              <span class="acc-lbl">Black</span>
+              <span class="acc-val">{{ gameReview.blackAccuracy }}%</span>
+            </div>
+          </div>
+        </div>
+        <p class="recap-verdict-text">{{ gameReview.summaryVerdict }}</p>
+      </div>
+
+      <!-- Complete Move-by-Move Review List -->
+      <div class="panel-card all-moves-list-card">
+        <div class="pos-header-row">
+          <span class="section-heading">All moves results ({{ allMoves.length }})</span>
+          <span class="panel-col-sub">Click move to inspect</span>
+        </div>
+
+        <div class="moves-full-feed" *ngIf="allMoves.length > 0; else noMovesTpl">
+          <div class="full-move-item"
+               *ngFor="let m of allMoves"
+               [class.active]="activeStepIndex === m.ply"
+               (click)="goToMove(m.ply)">
+            <div class="item-header-row">
+              <div class="item-left">
+                <span class="item-move-num">{{ m.color.toLowerCase() === 'white' ? m.moveNumber + '.' : m.moveNumber + '...' }}</span>
+                <span class="item-san">{{ m.san }}</span>
+                <span class="item-class-badge" [innerHTML]="getClassificationIcon(m.classification) | safeHtml" [title]="m.classification || ''"></span>
+              </div>
+              <div class="item-right">
+                <span class="item-eval" [ngClass]="getEvalClass(m.evaluation.scoreText)">{{ m.evaluation.scoreText || '-' }}</span>
+                <span class="item-accuracy" *ngIf="m.accuracyScore != null">{{ m.accuracyScore }}%</span>
+              </div>
+            </div>
+            <p class="item-explanation" *ngIf="m.explanation">{{ m.explanation }}</p>
+          </div>
+        </div>
+
+        <ng-template #noMovesTpl>
+          <div class="empty-moves-prompt">
+            <p>No moves analyzed yet.</p>
+            <p class="prompt-sub">Click <strong>Run full analysis</strong> to evaluate all moves with Stockfish.</p>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- Tab Content 2: Engine Lines -->
+    <div class="right-tab-body" *ngIf="activeRightTab === 'engine'">
+      <div class="panel-card engine-log-card">
+        <span class="section-heading">Principal Variations</span>
+        <div class="pv-lines-list" *ngIf="activeMove?.principalVariation; else noPvTpl">
+          <div class="pv-line-item">
+            <span class="pv-depth-badge">d{{ activeMove?.evaluation?.depth || 18 }}</span>
+            <code class="pv-line-code">{{ activeMove?.principalVariation }}</code>
+          </div>
+        </div>
+        <ng-template #noPvTpl>
+          <p class="pv-empty-text">Run full analysis to view deep Stockfish principal variation lines.</p>
+        </ng-template>
+        <details class="summary-details">
+          <summary class="summary-toggle">View Raw UCI Engine Log</summary>
+          <pre class="result-text">{{ analysisResult?.message || 'Stockfish engine initialized.' }}</pre>
+        </details>
+      </div>
+    </div>
+  </aside>
+</div>

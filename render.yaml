@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: chessanalyzer
+    env: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: Stockfish__ExecutablePath
+        value: /usr/games/stockfish
+      - key: PORT
+        value: 10000
